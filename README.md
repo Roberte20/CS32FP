@@ -16,3 +16,5 @@ An additional step, but I only plan to do it if the above portions are not chall
 # FP Design 4/10 Update
 
 After working on the FP design assignment, I am able to slightly narrow my project scope and enhance the topic to be of a more deliverable nature. Firstly, I skimmed over the basic documentation of pandas. After implementing 'starter code' for pandas, I was able to see how to do some basic data manipulation and how to parse some information. However, I wasn't able to pull data from excel. Secondly, I did more research on scikit-learn. After doing all of this, I feel that my project can pull data from a number of UK government websites (such as gilt rates or other nationally set relevant variables) and formatting them onto a spreadsheet. Following this transfer of data, I can run some regressions and analysis to view the trends of this data.  
+
+I would mainly be dealing with extracting data from websites and excel and being able to smoothly arrange the data. 
