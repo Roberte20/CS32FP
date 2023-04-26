@@ -110,6 +110,7 @@ def get_timeseries(dataset_name, dimension_values):
         return df, ds, edition_url
 
 def demo():
+        '''
         print("=" * 70)
         print("List of available datasets:")
         dss = list_of_datasets()
@@ -120,11 +121,11 @@ def demo():
          # Create a DataFrame from the list of titles
         df = pd.DataFrame(titles, columns=["title"])
  
-
         # Save the DataFrame as an Excel file
         df.to_excel("datasets_list.xlsx", index=False)
 
         [print(item.get("title")) for item in dss]
+        '''
 
         print("=" * 70)
         dataset_name = "UK Labour Market"
@@ -147,6 +148,18 @@ def demo():
         pp.pprint(dimensions)
         print("\n")
 
+        GDP_ds_name = "Annual GDP"
+        GDP_dimensions = {
+                "geography": "UKI",
+                "growthrate" : "gra",
+        }
+        print(f"Chosen dimensions for the {dataset_name}")
+        pp.pprint(GDP_dimensions, indent=4)
+
+        df_GDP = get_timeseries(GDP_ds_name, GDP_dimensions)[0]
+        df_GDP = df_GDP.sort_values("id")
+        print(GDP_ds_name)
+        print(df_GDP)
 
 
 if __name__ == "__main__":
