@@ -62,7 +62,7 @@ def get_dimensions(edition_url):
 
                 sr = requests.get(options_url, params={"limit": 50})
                 sresults = sr.json()
-                # TODO! Could add in paging here, as there *could* be multiple pages of valid options.
+                
                 logger.info(f"\tHas {sresults.get('count')} options")
                 # valid_options = [item.get("option") for item in sresults.get("items")]
                 option_descriptions = {
@@ -77,7 +77,7 @@ def get_dimensions(edition_url):
 def choose_dimensions(valid_dims, overrides={}):
         # By default, choose first valid item for all dimensions; then override where needed:
         chosen_dimensions = {k: next(iter(v.keys())) for k, v in valid_dims.items()}
-        # get whole time-series, not just a single point in time:
+        # get whole time-series, not just a single point
         chosen_dimensions["time"] = "*"
         chosen_dimensions.update(overrides)
         return chosen_dimensions
