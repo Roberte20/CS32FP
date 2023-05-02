@@ -178,7 +178,7 @@ def control():
         #  1 if you'd like to print list of available datasets
         #  2 if you'd like to see the valid dimension options for the chosen data
         #  3 if you'd like to see the table output of your chosen dataset
-        controut = 0
+        controut = 3
 
 
         if controut == 1:
