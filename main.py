@@ -26,14 +26,16 @@ def list_of_datasets():
                 # Save DataFrame to Excel file
                 
 
-
                 datasets.extend(results.get("items"))
                 num_retrieved = results.get("count")
                 offset += num_retrieved
                 if num_retrieved == 0: 
                         break 
+
         all_data.to_excel("datasets_output.xlsx", index=False)
+
         return datasets
+
 def get_dataset_by_name(datasets, target_name):
 
         for ds in datasets:
@@ -41,19 +43,21 @@ def get_dataset_by_name(datasets, target_name):
                         return ds
         return None
 
-def get_edition(dataset, prefered_edition="time-series"):
-    
+def get_edition(dataset, preferred_edition="time-series"):
+        # navigates through nested dictionaries to extract the value of the "href" key inside the "editions" dictionary, which is itself inside the "links" dictionary. 
         editions_url = dataset.get("links").get("editions").get("href")
-        r = requests.get(editions_url)
-        results = r.json()
-        for row in results.get("items"):
-                if row.get("edition") == prefered_edition:
-                        edition = row.get("links").get("latest_version").get("href")
-                        return edition
+        response = requests.get(editions_url)
+        results = response.json()
 
-        # Default to latest version, if requested version is not found.
         latest_version = dataset.get("links").get("latest_version").get("href")
-        return latest_version
+        edition = latest_version
+
+        for item in results.get("items"):
+                if item.get("edition") == preferred_edition:
+                        edition = item.get("links").get("latest_version").get("href")
+                        break
+
+        return edition
 
 def get_dimensions(edition_url):
 
@@ -81,11 +85,18 @@ def get_dimensions(edition_url):
 
 
 def choose_dimensions(valid_dims, overrides={}):
-        # By default, choose first valid item for all dimensions; then override where needed:
-        chosen_dimensions = {k: next(iter(v.keys())) for k, v in valid_dims.items()}
+        # By default, choose first valid item for all dimensions; then override where needed:'
+        chosen_dimensions = {}
+        # loop goes through each dimension in the valid_dims dictionary, finds the first available option for that dimension, and creates a new dictionary (chosen_dimensions) where the keys are the dimensions and the values are the first available options for each dimension.
+        for k, v in valid_dims.items():
+                chosen_dimensions[k] = next(iter(v.keys()))
         # get whole time-series, not just a single point
         chosen_dimensions["time"] = "*"
-        chosen_dimensions.update(overrides)
+        '''
+        for key, value in overrides.items():
+                if key in chosen_dimensions: 
+                        chosen_dimensions[key] = value
+        ''' 
         return chosen_dimensions
 
 
@@ -107,12 +118,11 @@ def get_timeseries(dataset_name, dimension_values):
         ds = get_dataset_by_name(dss, dataset_name)
         edition_url = get_edition(ds)
         valid_dims = get_dimensions(edition_url)
-
         if dimension_values is None:
                 return valid_dims
         chosen_dimensions = choose_dimensions(valid_dims, dimension_values)
         df = get_observations(edition_url, chosen_dimensions)
-       
+       # Return a tuple containing three elements: dataframe(df) with the observations, dataset observations (ds), and the edition URL
         return df, ds, edition_url
 
 def demo():
@@ -120,18 +130,15 @@ def demo():
         print("=" * 70)
         print("List of available datasets:")
         dss = list_of_datasets()
-
         # Extract the titles from the datasets list
         titles = [item.get("title") for item in dss]
-
          # Create a DataFrame from the list of titles
         df = pd.DataFrame(titles, columns=["title"])
- 
         # Save the DataFrame as an Excel file
         df.to_excel("datasets_list.xlsx", index=False)
-
         [print(item.get("title")) for item in dss]
         
+
 
         print("=" * 70)
         dataset_name = "UK Labour Market"
@@ -139,20 +146,24 @@ def demo():
         # Get the set of valid dimensions for the Labour Market set.
         # E.g. list of valid age groups, economic activity categories etc.
 
+
         dimensions = get_timeseries(dataset_name, None)
         pp.pprint(dimensions)
         df2 = pd.DataFrame(dimensions)
         df2.to_excel("UK Labour Market.xlsx", index = False)
         print("\n")
 
+
         dataset_name = "Annual GDP for England, Wales and the English regions"
         print(f"Valid options for dimensions for the {dataset_name}, with descriptions")
         # Get the set of valid dimensions for the Labour Market set.
         # E.g. list of valid age groups, economic activity categories etc.
 
+
         dimensions = get_timeseries(dataset_name, None)
         pp.pprint(dimensions)
         print("\n")
+
 
         GDP_ds_name = "Annual GDP"
         GDP_dimensions = {
@@ -170,63 +181,4 @@ def demo():
 
 if __name__ == "__main__":
     demo()
-
-'''
-data = {'Company': ['Atmos', 'Bonafi', 'Cisco'],
-        'Price': [45.89, 169.34, 22.94],
-        'City': ['Dallas', 'Boston', 'Boston']}
-df = pd.DataFrame(data)
-print("\nDataFrame:")
-print(df)
-
-# Basic DataFrame 
-
-print("\nDataframe statistics:")
-print(df.describe())
-
-# Selecting columns
-print("\nSelecting 'Company' column:")
-print(df['Company'])
-
-# Selecting rows by index
-print("\nSelecting row with index 1:")
-print(df.loc[1])
-
-# Filtering data
-print("\nFiltering rows where 'Price' is > 23:")
-print(df[df['Price'] > 23])
-
-# New Column
-df['Price_Change'] = [20, -15, 23.5]
-print("\n Adding new column 'Price_Change':")
-print(df)
-
-# Grouping data
-grouped_data = df.groupby('City').sum()
-print(grouped_data)
-
-# Sorting data  
-sorted_data = df.sort_values(by='Price', ascending=False)
-print("\nData sorted by 'Price':")
-print(sorted_data)
-
-'''
-
-'''
-api_key = '932528a61e46dbfce70dde3f56e455ef'
-series_id = 'GDPC1'  # Real Gross Domestic Product (USA)
-url = f'https://api.stlouisfed.org/fred/series/observations?series_id={series_id}&api_key={api_key}&file_type=json'
-
-response = requests.get(url)
-data = response.json()
-
-observations = data['observations']
-df = pd.DataFrame(observations)
-
-df['date'] = pd.to_datetime(df['date'])
-df['value'] = pd.to_numeric(df['value'], errors='coerce')
-df.dropna(inplace=True)
-
-df.to_excel('gdp_data.xlsx', index=False)
-'''
 
