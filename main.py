@@ -32,7 +32,7 @@ def list_of_datasets():
                 if num_retrieved == 0: 
                         break 
 
-        # all_data.to_excel("datasets_full_output.xlsx", index=False)
+        all_data.to_excel("datasets_full_output.xlsx", index=False)
 
         return datasets
 
