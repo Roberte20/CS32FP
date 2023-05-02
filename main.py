@@ -3,9 +3,7 @@
 import requests
 import pandas as pd 
 import pprint as pp
-import logging
 
-logger = logging.getLogger(__name__)
 
 ROOT_URL = "https://api.beta.ons.gov.uk/v1/"
 
@@ -15,24 +13,32 @@ def list_of_datasets():
         num_to_get = 100
         datasets = []
         offset = 0 
+
+        all_data = pd.DataFrame()
+
         while len(datasets) < num_to_get:
                 r = requests.get(ROOT_URL + "datasets", params = {"offset": offset})
                 results = r.json()
-                [logger.info(item.get("title")) for item in results.get("items")]
+
+
+                df = pd.DataFrame(results.get("items"))
+                all_data = pd.concat([all_data, df], ignore_index = True)
+                # Save DataFrame to Excel file
+                
+
+
                 datasets.extend(results.get("items"))
                 num_retrieved = results.get("count")
                 offset += num_retrieved
                 if num_retrieved == 0: 
                         break 
-        logger.info(f"\nFound {len(datasets)} datasets")
+        all_data.to_excel("datasets_output.xlsx", index=False)
         return datasets
 def get_dataset_by_name(datasets, target_name):
 
         for ds in datasets:
                 if target_name.lower() in ds.get("title").lower():
-                        logger.info(f"Found dataset '{ds.get('title')}'")
                         return ds
-        logger.info(f"No dataset found containing '{target_name}'")
         return None
 
 def get_edition(dataset, prefered_edition="time-series"):
@@ -56,19 +62,19 @@ def get_dimensions(edition_url):
         r = requests.get(edition_url + "/dimensions")
         results = r.json()
         for dimension in results.get("items"):
-                logger.info(f'{dimension.get("name")}: \t{dimension.get("label")}')
+
                 dim_id = dimension.get("links").get("options").get("id")
                 options_url = f"{edition_url}/dimensions/{dim_id}/options"
 
                 sr = requests.get(options_url, params={"limit": 50})
                 sresults = sr.json()
                 
-                logger.info(f"\tHas {sresults.get('count')} options")
+        
                 # valid_options = [item.get("option") for item in sresults.get("items")]
                 option_descriptions = {
                 item.get("option"): item.get("label") for item in sresults.get("items")
                 }
-                logger.info(f'{dimension.get("name")}: {option_descriptions}')
+
                 valid_dimensions[dimension.get("name")] = option_descriptions
 
         return valid_dimensions
@@ -101,16 +107,16 @@ def get_timeseries(dataset_name, dimension_values):
         ds = get_dataset_by_name(dss, dataset_name)
         edition_url = get_edition(ds)
         valid_dims = get_dimensions(edition_url)
-        logger.info(valid_dims)
+
         if dimension_values is None:
                 return valid_dims
         chosen_dimensions = choose_dimensions(valid_dims, dimension_values)
         df = get_observations(edition_url, chosen_dimensions)
-        logger.info(df.shape)
+       
         return df, ds, edition_url
 
 def demo():
-        '''
+        
         print("=" * 70)
         print("List of available datasets:")
         dss = list_of_datasets()
@@ -125,7 +131,7 @@ def demo():
         df.to_excel("datasets_list.xlsx", index=False)
 
         [print(item.get("title")) for item in dss]
-        '''
+        
 
         print("=" * 70)
         dataset_name = "UK Labour Market"
